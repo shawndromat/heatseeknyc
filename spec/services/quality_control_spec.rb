@@ -45,11 +45,13 @@ describe QualityControl do
     it "updates violation status", :vcr do
       violation_readings = @user.readings.where(violation: true)
       expect(violation_readings.count).to eq 10
+      violation_readings = @user.readings.where(violation_severity: nil, violation: false)
+      expect(violation_readings.count).to eq 0
 
       QualityControl.update_outdoor_temps_for(@user.readings, throttle, :silent)
 
-      violation_readings = @user.readings.where(violation: true)
-      expect(violation_readings.count).to eq 0
+      violation_readings = @user.readings.where(violation_severity: nil, violation: false)
+      expect(violation_readings.count).to eq 10
     end
   end
 end

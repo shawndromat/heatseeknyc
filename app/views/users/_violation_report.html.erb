@@ -9,7 +9,8 @@
         <th>Name <i class="fa"></i></th>
         <th>Building Address <i class="fa"></i></th>
         <th>Current Temperature <i class="fa"></i></th>
-        <th>Number of Violations <i class="fa"></i></th>
+        <th>Number of Major Violations <i class="fa"></i></th>
+        <th>Number of Minor Violations <i class="fa"></i></th>
       </tr>
     </thead>
     <tbody>
@@ -20,7 +21,8 @@
         <td><%= link_to user.name, [current_user, collaboration] %></td>
         <td><%= "#{user.address}, #{user.zip_code}" %></td>
         <td><%= user.current_temp %></td>
-        <td><%= collaboration.violations_count %></td>
+        <td><%= collaboration.major_violations_count %></td>
+        <td><%= collaboration.minor_violations_count %></td>
       </tr>
     <% end %>
     </tbody>

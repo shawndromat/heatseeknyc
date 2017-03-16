@@ -16,6 +16,18 @@ class QualityControl
     end
   end
 
+  def self.add_violation_severity(readings)
+    readings.find_each do |r|
+
+      user = User.find_by_id(r.user_id)
+      if user
+        r.set_violation_boolean
+        r.save
+        puts 'save successful'
+      end
+    end
+  end
+
   def self.update_outdoor_temps_for(readings, throttle = nil, silent = nil)
     readings.find_each do |r|
       time = r.created_at
@@ -25,8 +37,7 @@ class QualityControl
 
       if updated_temp.is_a? Numeric
         r.outdoor_temp = updated_temp
-        regulator = Regulator.new(r)
-        r.violation = regulator.has_detected_violation?
+        r.set_violation_boolean
         r.save
         puts 'save successful' unless silent
       else

@@ -293,19 +293,25 @@ class User < ActiveRecord::Base
   end
 
   def collaborations_with_violations
-    recent_violations = Reading
-                       .where("readings.created_at > ?", 3.days.ago)
-                       .where(violation: true).to_sql
+    # select users.first_name, users.last_name, users.address,
+    #        SUM(CASE WHEN readings.violation_severity = 1 THEN 1 ELSE 0 END) AS major_violations_count,
+    #        SUM(CASE WHEN readings.violation_severity = 0 THEN 1 ELSE 0 END) AS minor_violations_count
+    # from users
+    # left outer join readings on readings.user_id = users.id where readings.temp > 40
+    # group by (users.first_name, users.last_name, users.address) order by major_violations_count desc;
 
-    users_with_recent_violations = User.select("users.id, COUNT(readings.id) as violations_count")
-                    .joins("LEFT OUTER JOIN (#{recent_violations}) AS readings ON readings.user_id = users.id")
+    users_with_recent_violations = User.select("users.id,
+      SUM(CASE WHEN readings.violation_severity = #{Reading.violation_severities[:major_violation]} THEN 1 ELSE 0 END) AS major_violations_count,
+      SUM(CASE WHEN readings.violation_severity = #{Reading.violation_severities[:minor_violation]} THEN 1 ELSE 0 END) AS minor_violations_count")
+                    .joins("LEFT OUTER JOIN readings ON readings.user_id = users.id")
+                    .where("readings.created_at > ?", 3.days.ago)
                     .group("users.id").to_sql
 
     @collaborations_with_violations ||= begin
       collaborations
         .joins("INNER JOIN (#{users_with_recent_violations}) users ON users.id = collaborations.collaborator_id")
-        .select("collaborations.*, users.violations_count AS violations_count")
-        .order("violations_count desc")
+        .select("collaborations.*, users.minor_violations_count AS minor_violations_count, users.major_violations_count AS major_violations_count")
+        .order("major_violations_count desc")
         .includes(:collaborator)
     end
   end

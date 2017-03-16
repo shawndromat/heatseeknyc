@@ -8,16 +8,18 @@ FactoryGirl.define do
     association :twine
 
     trait :day_time do
-      sequence(:created_at) { |n| Time.new(2014,03,01,15,40,n % 60,'-04:00') }
+      sequence(:created_at) { |n| Time.new(2015,03,01,15,40,n % 60,'-04:00') }
     end
 
     trait :night_time do
-      sequence(:created_at) { |n| Time.new(2014,03,01,23,40,n % 60,'-04:00') }
+      sequence(:created_at) { |n| Time.new(2015,03,01,23,40,n % 60,'-04:00') }
     end
 
-    trait :violation do
+    trait :major_violation do
       outdoor_temp 30
       temp 30
     end
+
+    factory :minor_violation, traits: [:day_time]
   end
 end

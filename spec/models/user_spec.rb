@@ -96,25 +96,33 @@ describe User do
       create(:collaboration, :user_id => lawyer.id, :collaborator_id => tenant_with_no_violations.id)
 
       create(:collaboration, :user_id => lawyer.id, :collaborator_id => tenant_with_violations.id)
-      create(:reading, :violation, user: tenant_with_violations)
+      create(:reading, :major_violation, user: tenant_with_violations)
+      create(:minor_violation, user: tenant_with_violations)
 
       create(:collaboration, :user_id => lawyer.id, :collaborator_id => tenant_with_old_violations.id)
-      create(:reading, :violation, user: tenant_with_old_violations, created_at: 5.days.ago)
+      create(:reading, :major_violation, user: tenant_with_old_violations, created_at: 5.days.ago)
     end
 
     it "finds all collaborations" do
       expect(lawyer.collaborations_with_violations.length).to be 3
     end
 
-    it "includes violation_count" do
+    it "includes minor_violation_count" do
       collaborations = lawyer.collaborations_with_violations
-      expect(collaborations.find_by(collaborator: tenant_with_no_violations).violations_count).to be 0
-      expect(collaborations.find_by(collaborator: tenant_with_violations).violations_count).to be 1
-      expect(collaborations.find_by(collaborator: tenant_with_old_violations).violations_count).to be 0
+      expect(collaborations.find_by(collaborator: tenant_with_no_violations).minor_violations_count).to be 0
+      expect(collaborations.find_by(collaborator: tenant_with_violations).minor_violations_count).to be 1
+      expect(collaborations.find_by(collaborator: tenant_with_old_violations).minor_violations_count).to be 0
+    end
+
+    it "includes major_violation_count" do
+      collaborations = lawyer.collaborations_with_violations
+      expect(collaborations.find_by(collaborator: tenant_with_no_violations).major_violations_count).to be 0
+      expect(collaborations.find_by(collaborator: tenant_with_violations).major_violations_count).to be 1
+      expect(collaborations.find_by(collaborator: tenant_with_old_violations).major_violations_count).to be 0
     end
 
     it "orders collaborations by violation count" do
-      violations_counts = lawyer.collaborations_with_violations.to_ary.map(&:violations_count)
+      violations_counts = lawyer.collaborations_with_violations.to_ary.map(&:minor_violations_count)
       expect(violations_counts.sort.reverse).to eq violations_counts
     end
   end

@@ -3,6 +3,8 @@ class Reading < ActiveRecord::Base
   belongs_to :sensor
   belongs_to :user
 
+  enum violation_severity: [ :minor_violation, :major_violation ]
+
   validates :user_id, presence: true
   validates :temp, presence: true
 
@@ -11,6 +13,13 @@ class Reading < ActiveRecord::Base
   def set_violation_boolean
     time = created_at || Time.now
     self.violation = user.in_violation?(time, temp, outdoor_temp)
+    if self.violation?
+      self.violation_severity = "major_violation" if user.in_consecutive_violation?(time, temp, outdoor_temp, sensor_id)
+      self.violation_severity = "major_violation" if user.in_major_violation?(time, temp, outdoor_temp)
+      self.violation_severity = "minor_violation" unless self.major_violation?
+    else
+      self.violation_severity = nil
+    end
     true # this method must return true
   end
 

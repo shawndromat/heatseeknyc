@@ -26,6 +26,134 @@ describe Reading do
     expect(reading.persisted?).to eq false
   end
 
+  describe "sets major violations" do
+    context "during the day" do
+      it "sets reading 5+ degrees below minimum as major violation" do
+        daytime = Time.parse('March 1, 2015 12:00:00')
+        reading = create(:reading, temp: 63, outdoor_temp: 54, created_at: daytime)
+
+        expect(reading.violation_severity).to eq "major_violation"
+        expect(reading.violation?).to eq true
+      end
+    end
+
+    context "during the night" do
+      it "sets reading 5+ degrees below minimum as major violation" do
+        nighttime = Time.parse('March 1, 2015 1:00:00')
+        reading = create(:reading, temp: 50, outdoor_temp: 39, created_at: nighttime)
+
+        expect(reading.violation_severity).to eq "major_violation"
+        expect(reading.violation?).to eq true
+      end
+    end
+  end
+
+  describe "sets minor violations" do
+    context "during the day" do
+      it "sets reading less than 5 degrees below minimum (but still below) as violation (minor)" do
+        daytime = Time.parse('March 1, 2015 12:00:00')
+        reading = create(:reading, temp: 64, outdoor_temp: 54, created_at: daytime)
+
+        expect(reading.violation_severity).to eq "minor_violation"
+        expect(reading.violation?).to eq true
+      end
+    end
+
+    context "during the night" do
+      it "sets reading less than 5 degrees below minimum (but still below) as violation (minor)" do
+        nighttime = Time.parse('March 1, 2015 1:00:00')
+        reading = create(:reading, temp: 51, outdoor_temp: 39, created_at: nighttime)
+
+        expect(reading.violation_severity).to eq "minor_violation"
+        expect(reading.violation?).to eq true
+      end
+    end
+  end
+
+  describe "consecutive violations" do
+    context "during midday" do
+      it "sets three major violations when three consecutive readings are 3 degrees below requirement" do
+        time = Time.parse('March 1, 2015 15:00:00')
+
+        reading1 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time - 2.hour, sensor_id: 1)
+        expect(reading1.violation?).to eq true
+        expect(reading1.violation_severity).to eq "minor_violation"
+
+        reading2 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time - 1.hour, sensor_id: 1)
+        expect(reading2.violation?).to eq true
+        expect(reading2.violation_severity).to eq "minor_violation"
+
+        reading3 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time, sensor_id: 1)
+        expect(reading3.violation?).to eq true
+
+        expect(reading1.reload.violation_severity).to eq "major_violation"
+        expect(reading2.reload.violation_severity).to eq "major_violation"
+        expect(reading3.violation_severity).to eq "major_violation"
+      end
+    end
+
+    context "during night" do
+      it "sets three major violations when three consecutive readings are 3 degrees below requirement" do
+        time = Time.parse('March 1, 2015 1:00:00')
+
+        reading1 = create(:reading, temp: 52, outdoor_temp: 39, created_at: time - 2.hour, sensor_id: 1)
+        expect(reading1.violation?).to eq true
+        expect(reading1.violation_severity).to eq "minor_violation"
+
+        reading2 = create(:reading, temp: 52, outdoor_temp: 39, created_at: time - 1.hour, sensor_id: 1)
+        expect(reading2.violation?).to eq true
+        expect(reading2.violation_severity).to eq "minor_violation"
+
+        reading3 = create(:reading, temp: 52, outdoor_temp: 39, created_at: time, sensor_id: 1)
+        expect(reading3.violation?).to eq true
+
+        expect(reading1.reload.violation_severity).to eq "major_violation"
+        expect(reading2.reload.violation_severity).to eq "major_violation"
+        expect(reading3.violation_severity).to eq "major_violation"
+      end
+    end
+
+    context "during transitional (shoulder) times" do
+      it "ignores morning shoulder times when setting consecutive major violations" do
+        time = Time.parse('March 1, 2015 7:00:00')
+
+        reading1 = create(:reading, temp: 52, outdoor_temp: 39, created_at: time - 2.hour, sensor_id: 1)
+        expect(reading1.violation?).to eq true
+        expect(reading1.violation_severity).to eq "minor_violation"
+
+        reading2 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time - 1.hour, sensor_id: 1)
+        expect(reading2.violation?).to eq true
+        expect(reading2.violation_severity).to eq "minor_violation"
+
+        reading3 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time, sensor_id: 1)
+
+        expect(reading1.reload.violation_severity).to eq "minor_violation"
+        expect(reading2.reload.violation_severity).to eq "minor_violation"
+        expect(reading3.violation_severity).to eq "minor_violation"
+        expect(reading3.violation?).to eq true
+      end
+    end
+
+    it "ignores evening shoulder times when setting consecutive major violations" do
+      time = Time.parse('March 1, 2015 21:00:00')
+
+      reading1 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time - 2.hour, sensor_id: 1)
+      expect(reading1.violation?).to eq true
+      expect(reading1.violation_severity).to eq "minor_violation"
+
+      reading2 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time - 1.hour, sensor_id: 1)
+      expect(reading2.violation?).to eq true
+      expect(reading2.violation_severity).to eq "minor_violation"
+
+      reading3 = create(:reading, temp: 65, outdoor_temp: 39, created_at: time, sensor_id: 1)
+
+      expect(reading1.reload.violation_severity).to eq "minor_violation"
+      expect(reading2.reload.violation_severity).to eq "minor_violation"
+      expect(reading3.violation_severity).to eq "minor_violation"
+      expect(reading3.violation?).to eq true
+    end
+  end
+
   describe ".create_from_params" do
     it "rounds temperature properly" do
       allow(WeatherMan).to receive(:outdoor_temp_for).and_return(45)
