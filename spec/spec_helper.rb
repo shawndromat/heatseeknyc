@@ -14,7 +14,6 @@ Timecop.travel(DateTime.parse("2015-03-01 00:00:00 -0500"))
 Spork.prefork do
   require File.expand_path("../../config/environment", __FILE__)
   require "rspec/rails"
-  require "rspec/autorun"
   require "capybara/rails"
   require "rails/application"
   require "rake"
@@ -29,12 +28,10 @@ Spork.prefork do
 
   RSpec.configure do |config|
     config.include FactoryGirl::Syntax::Methods
-    config.include Devise::TestHelpers, :type => :controller
+    config.include Devise::TestHelpers, type: :controller
     config.include Requests::JsonHelpers, type: :request
 
-    config.treat_symbols_as_metadata_keys_with_true_values = true
-
-    config.filter_run :focus => true
+    config.filter_run focus: true
 
     config.run_all_when_everything_filtered = true
 
@@ -43,6 +40,8 @@ Spork.prefork do
     config.use_transactional_fixtures = true
 
     config.infer_base_class_for_anonymous_controllers = false
+
+    # config.infer_spec_type_from_file_location!
 
     config.order = "random"
 
