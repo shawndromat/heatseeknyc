@@ -4,7 +4,7 @@ class AddBBLDataToBuildings
   def self.exec
     buildings_updated = 0
 
-    Building.where("state ILIKE '%new york%'").each do |b|
+    Building.where("state = 'new york' OR state = 'New York'").each do |b|
       next if b.bbl
 
       response = HTTParty.get(
