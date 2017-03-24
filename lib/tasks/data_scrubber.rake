@@ -8,4 +8,9 @@ namespace :data do
   task scrub_data: :environment do
     ScrubDataForBuildingsAndUsers.exec
   end
+
+  desc "This task adds BBL numbers to buildings by querying the Geoclient API"
+  task backfill_bbl: :environment do
+    AddBBLDataToBuildings.exec
+  end
 end
