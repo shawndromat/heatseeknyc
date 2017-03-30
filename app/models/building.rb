@@ -18,10 +18,39 @@ class Building < ActiveRecord::Base
   end
 
   def set_location_data(params = {})
-    if zip_code != params[:zip_code]
+    if zip_code.present? && zip_code != params[:zip_code]
       geocode
       reverse_geocode
     end
+
+    if zip_code.present? && street_address.present?
+      get_bbl
+    end
+  end
+
+  def get_bbl
+    response = HTTParty.get(
+        "https://api.cityofnewyork.us/geoclient/v1/address.json",
+        { query: query_params.merge(access_params) }
+    )
+    begin
+      payload = JSON.parse(response.body)["address"]
+      self.bbl = payload["bbl"].gsub(/\D/, '')
+    rescue
+    end
+  end
+
+  def query_params
+    address = street_address.split(',')[0].split
+    {
+        houseNumber: address.shift,
+        street: address.join(" "),
+        zip: self.zip_code
+    }
+  end
+
+  def access_params
+    { app_id: ENV["GEOCLIENT_APP_ID"], app_key: ENV["GEOCLIENT_APP_KEY"] }
   end
 
   def self.for_tenant(tenant)

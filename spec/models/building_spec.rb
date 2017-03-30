@@ -66,4 +66,30 @@ describe Building, :vcr do
       expect(building_2).to be_valid
     end
   end
+
+  describe "#set_location_data" do
+    context "when zip code is not present" do
+      it "does not set city or state or BBL" do
+        building.zip_code = nil
+        building.set_location_data
+
+        expect(building.city).to eq(nil)
+        expect(building.state).to eq(nil)
+        expect(building.bbl).to eq(nil)
+      end
+    end
+
+    context "when zip code is present" do
+      it "sets city and state and BBL" do
+        building.street_address = "625 6th Ave"
+        building.zip_code = "10011"
+        building.save
+        building.set_location_data
+
+        expect(building.city).to eq("Mountain View")
+        expect(building.state).to eq("New York")
+        expect(building.bbl).to eq("1007940030")
+      end
+    end
+  end
 end
