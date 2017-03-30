@@ -162,3 +162,4 @@ users.each do |user|
 end
 
 Reading.create(temp: 115, outdoor_temp: 37, user: jake, twine: jake.twine)
+Reading.create(temp: 60, outdoor_temp: 37, user: jane, twine: jane.twine)

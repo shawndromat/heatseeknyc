@@ -407,7 +407,7 @@ describe UsersController, type: :controller do
             password_confirmation: 'password',
             address: '40 Broad St',
             zip_code: '10004',
-            set_location_data: true
+            set_location_data: 'true'
           }
 
           user = User.last

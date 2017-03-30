@@ -29,7 +29,7 @@ describe User, :vcr do
 
       context "and the method should set location data" do
         it "creates a new building with a city and state" do
-          params[:set_location_data] = true
+          params[:set_location_data] = "true"
           building = User.new_with_building(params).building
 
           expect(building.street_address).to eq("40 Broad St")
