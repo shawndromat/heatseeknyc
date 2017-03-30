@@ -88,7 +88,7 @@ class User < ActiveRecord::Base
   define_measureable_methods(METRICS, CYCLES, MEASUREMENTS)
 
   def self.new_with_building(params)
-    set_location = params.delete(:set_location_data)
+    set_location = params.delete('set_location_data')
     user = self.new params
     building_params = { street_address: user.address, zip_code: user.zip_code }
     building = Building.find_by building_params

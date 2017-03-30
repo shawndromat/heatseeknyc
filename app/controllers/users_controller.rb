@@ -36,7 +36,7 @@ class UsersController < ApplicationController
 
   def create
     stripped_params = user_params.inject({}) do |params, (key, value)|
-      params[key] = value.try(:strip)
+      params[key] = value.try(:strip) || value
       params
     end
 
