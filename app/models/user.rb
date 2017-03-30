@@ -95,7 +95,7 @@ class User < ActiveRecord::Base
 
     unless building
       building = Building.new building_params
-      building.set_location_data if set_location
+      building.set_location_data if set_location == 'true'
     end
 
     user.building = building
